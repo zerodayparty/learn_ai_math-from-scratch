@@ -1,0 +1,13 @@
+# 실행할 때 --env-file /dev/null을 붙이고 변수 치환을 사용하지 않는다.
+services:
+    # 수학 실험 하나만 실행한다.
+    math:
+        # 현재 폴더의 허용된 파일로 이미지를 만든다.
+        build: .
+        # 결과를 호스트의 프로젝트 폴더에 보관한다.
+        volumes:
+            - ./outputs:/app/outputs
+        # 실행 중 외부 연결을 사용하지 않는다.
+        network_mode: none
+        # 생성 이미지로 전체 실험을 실행한다.
+        command: ["python", "main.py", "--synthetic"]

@@ -1,6 +1,6 @@
 # 🟩 math from scratch for ai - AI가 어떻게 학습하는지 수학으로 직접 풀어보기  
 
-<br><br>
+<br>
 
 ## 🟢 1. 미션 소개  
 

@@ -1,0 +1,8 @@
+# 기본적으로 모든 파일을 빌드에서 제외한다.
+**
+# 실행에 필요한 파일만 허용한다.
+!Dockerfile
+!requirements.txt
+!main.py
+!src/
+!src/*.py
