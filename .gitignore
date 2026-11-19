@@ -45,6 +45,7 @@ firebase-adminsdk*.json
 
 # API key / token dumps
 AGENTS.md
+CLAUDE.md
 *.token
 *.secret
 *.credentials
@@ -219,7 +220,10 @@ log/
 # Outputs / Generated Files
 # =========================================================
 
-outputs/
+# 평가자가 GitHub에서 결과를 볼 수 있게 outputs 바로 아래의 PNG와 summary.json만 추적한다.
+outputs/*
+!outputs/*.png
+!outputs/summary.json
 output/
 results/
 result/

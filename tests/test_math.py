@@ -136,6 +136,18 @@ class MathTests(unittest.TestCase):  # 수학의 실제 성질을 검증한다.
             expected = 5 * (1 - 2 * lr) ** np.arange(21)  # 이론상 좌표를 계산한다.
             np.testing.assert_allclose(path[:, 0], expected, atol=1e-10)  # 실험과 점화식을 비교한다.
 
+    def test_ellipse_lr_half_diverges(self):  # 타원형 함수의 발산을 점화식으로 검사한다.
+        """x²+10y²에서 lr=0.5면 y_next=(1-20*0.5)y=-9y로 발산한다."""
+        path = optimize(lambda p: quadratic_gradient(p, 10), [5, 5], VanillaGD(0.5), 5)  # 다섯 단계만 실행한다.
+        np.testing.assert_allclose(path[:, 1], 5 * (-9.0) ** np.arange(6))  # y 좌표가 매번 -9배인지 확인한다.
+
+    def test_momentum_beats_gd_at_same_small_lr(self):  # 같은 학습률에서 관성의 이점을 검사한다.
+        """타원형 함수, lr=0.01에서 beta=0.9 Momentum이 GD보다 먼저 반경 0.1 안에 머문다."""
+        gradient = lambda p: quadratic_gradient(p, 10)  # 타원형 함수의 기울기를 정한다.
+        gd = path_summary(optimize(gradient, [5, 5], VanillaGD(0.01), 300), 10)  # GD 결과를 요약한다.
+        momentum = path_summary(optimize(gradient, [5, 5], Momentum(0.01, 0.9), 300), 10)  # Momentum 결과를 요약한다.
+        self.assertLess(momentum["sustained_hit"], gd["sustained_hit"])  # Momentum이 더 빨리 수렴하는지 확인한다.
+
     def test_momentum_reset_and_zero_beta(self):  # 관성 상태의 재현성을 확인한다.
         """beta=0은 GD이고 반복 실행 시 속도가 초기화된다."""
         plain = optimize(quadratic_gradient, [5, 5], VanillaGD(0.1), 10)  # GD 경로를 만든다.
@@ -211,13 +223,13 @@ class MathTests(unittest.TestCase):  # 수학의 실제 성질을 검증한다.
         self.assertIsNone(result["sustained_hit"])  # 지속 수렴은 아니라고 확인한다.
 
     def test_full_pipeline_artifacts(self):  # 모든 실험의 실제 파일 생성을 검사한다.
-        """전체 검증 통과와 10개 PNG 저장을 확인한다."""
+        """전체 검증 통과와 13개 PNG 저장을 확인한다."""
         root = Path("outputs")  # 임시 파일을 프로젝트 안에 둔다.
         root.mkdir(exist_ok=True)  # 출력 폴더를 만든다.
         with tempfile.TemporaryDirectory(dir=root) as folder:  # 검사 후 결과를 자동으로 지운다.
             report = run_experiments(folder)  # 외부 이미지 없이 전체 실험을 실행한다.
             self.assertTrue(all(report["checks"].values()))  # 전체 수치 판정을 확인한다.
-            self.assertEqual(len(list(Path(folder).glob("*.png"))), 10)  # 요구된 그림이 모두 만들어졌는지 확인한다.
+            self.assertEqual(len(list(Path(folder).glob("*.png"))), 13)  # 요구된 그림이 모두 만들어졌는지 확인한다.
             self.assertTrue((Path(folder) / "summary.json").is_file())  # 요약 데이터 파일을 확인한다.
 
 

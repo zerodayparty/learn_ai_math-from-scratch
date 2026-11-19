@@ -1,0 +1,350 @@
+{
+  "seed": 42,
+  "image_source": "local image",
+  "area": {
+    "Rotation pi/4": {
+      "determinant": 1.0,
+      "area_ratio": 0.9999999999999999,
+      "error": 1.1102230246251565e-16
+    },
+    "Scaling (2, 0.5)": {
+      "determinant": 1.0,
+      "area_ratio": 1.0,
+      "error": 0.0
+    },
+    "Shear k=1": {
+      "determinant": 1.0,
+      "area_ratio": 1.0,
+      "error": 0.0
+    }
+  },
+  "power_iteration": {
+    "value": 4.618033988749895,
+    "vector": [
+      0.8506508082668591,
+      0.5257311122569591
+    ],
+    "iterations": 36,
+    "residual": 3.6229590221024135e-10,
+    "relative_error": 0.0,
+    "alignment_error": 1.1102230246251565e-16
+  },
+  "image_shape": [
+    63,
+    64
+  ],
+  "svd": [
+    {
+      "requested_k": 10,
+      "effective_rank": 10,
+      "stored_values": 1280,
+      "storage_ratio": 0.31746031746031744,
+      "mse": 0.009304269974843744
+    },
+    {
+      "requested_k": 50,
+      "effective_rank": 50,
+      "stored_values": 6400,
+      "storage_ratio": 1.5873015873015872,
+      "mse": 7.34798567619693e-05
+    },
+    {
+      "requested_k": 100,
+      "effective_rank": 63,
+      "stored_values": 8064,
+      "storage_ratio": 2.0,
+      "mse": 5.2921431840760344e-30
+    }
+  ],
+  "derivative": {
+    "value": 6.000000000039306,
+    "absolute_error": 3.930633596382904e-11
+  },
+  "gradient_tangent_dot": 0.0,
+  "backprop": {
+    "forward": {
+      "z1": [
+        0.1,
+        0.3
+      ],
+      "a1": [
+        0.52497918747894,
+        0.574442516811659
+      ],
+      "z2": 0.6071551038264654,
+      "y_pred": 0.6472915699946178,
+      "loss": 0.43495843685146063
+    },
+    "gradients": {
+      "y_pred": -1.5448988467566709,
+      "z2": -0.3527084300053822,
+      "W2": [
+        -0.18516458500119815,
+        -0.20261071823298063
+      ],
+      "a1": [
+        -0.1763542150026911,
+        -0.2116250580032293
+      ],
+      "z1": [
+        -0.04397851580869701,
+        -0.051733504390925604
+      ],
+      "W1": [
+        [
+          -0.04397851580869701,
+          -0.0
+        ],
+        [
+          -0.051733504390925604,
+          -0.0
+        ]
+      ],
+      "b2": -0.3527084300053822,
+      "b1": [
+        -0.04397851580869701,
+        -0.051733504390925604
+      ]
+    },
+    "gradient_check": {
+      "W1": 3.695856121144203e-12,
+      "b1": 3.695856121144203e-12,
+      "W2": 3.2595592891482283e-12,
+      "b2": 1.6270873537393982e-12
+    }
+  },
+  "circle_optimization": {
+    "GD lr=0.1": {
+      "final_point": [
+        1.0185179881672439e-09,
+        1.0185179881672439e-09
+      ],
+      "final_radius": 1.4404019523870759e-09,
+      "final_loss": 2.0747577844404998e-18,
+      "first_hit": 20,
+      "sustained_hit": 20
+    },
+    "Momentum lr=0.1 beta=0.9": {
+      "final_point": [
+        -0.01425705560591328,
+        -0.01425705560591328
+      ],
+      "final_radius": 0.020162521397389926,
+      "final_loss": 0.0004065272691002066,
+      "first_hit": 10,
+      "sustained_hit": 77
+    }
+  },
+  "learning_rates": {
+    "lr=0.1": {
+      "final_point": [
+        0.006189700196426903,
+        0.006189700196426903
+      ],
+      "final_radius": 0.008753557964810336,
+      "final_loss": 7.662477704329447e-05,
+      "first_hit": 20,
+      "sustained_hit": 20
+    },
+    "lr=0.5": {
+      "final_point": [
+        0.0,
+        0.0
+      ],
+      "final_radius": 0.0,
+      "final_loss": 0.0,
+      "first_hit": 1,
+      "sustained_hit": 1
+    },
+    "lr=0.9": {
+      "final_point": [
+        0.0061897001964269175,
+        0.0061897001964269175
+      ],
+      "final_radius": 0.008753557964810357,
+      "final_loss": 7.662477704329484e-05,
+      "first_hit": 20,
+      "sustained_hit": 20
+    },
+    "lr=1.0": {
+      "final_point": [
+        5.0,
+        5.0
+      ],
+      "final_radius": 7.0710678118654755,
+      "final_loss": 50.0,
+      "first_hit": null,
+      "sustained_hit": null
+    },
+    "lr=1.1": {
+      "final_point": [
+        1186.8815689988542,
+        1186.8815689988542
+      ],
+      "final_radius": 1678.504011808838,
+      "final_loss": 2817375.7176583637,
+      "first_hit": null,
+      "sustained_hit": null
+    }
+  },
+  "learning_rates_ellipse": {
+    "lr=0.01": {
+      "final_point": [
+        2.7274215969121864,
+        0.006189700196426899
+      ],
+      "final_radius": 2.7274286204576543,
+      "final_loss": 7.4392116911882376,
+      "first_hit": null,
+      "sustained_hit": null
+    },
+    "lr=0.05": {
+      "final_point": [
+        0.21195579137608084,
+        0.0
+      ],
+      "final_radius": 0.21195579137608084,
+      "final_loss": 0.04492525749786071,
+      "first_hit": null,
+      "sustained_hit": null
+    },
+    "lr=0.09": {
+      "final_point": [
+        0.012983314456261268,
+        0.006189700196426893
+      ],
+      "final_radius": 0.014383283449609478,
+      "final_loss": 0.000551690339486634,
+      "first_hit": 21,
+      "sustained_hit": 21
+    },
+    "lr=0.1": {
+      "final_point": [
+        0.006189700196426903,
+        5.0
+      ],
+      "final_radius": 5.000003831237384,
+      "final_loss": 250.0000383123885,
+      "first_hit": null,
+      "sustained_hit": null
+    },
+    "lr=0.5": {
+      "final_point": [
+        0.0,
+        2.1195579137608104e+29
+      ],
+      "final_radius": 2.1195579137608104e+29,
+      "final_loss": 4.492525749786079e+59,
+      "first_hit": null,
+      "sustained_hit": null
+    }
+  },
+  "ellipse_optimization": {
+    "GD lr=0.01": {
+      "final_point": [
+        0.011662528339757134,
+        4.226356249085324e-29
+      ],
+      "final_radius": 0.011662528339757134,
+      "final_loss": 0.0001360145672756383,
+      "first_hit": 194,
+      "sustained_hit": 194
+    },
+    "Momentum lr=0.01 beta=0.9": {
+      "final_point": [
+        -6.213836833402283e-07,
+        6.879333194427101e-07
+      ],
+      "final_radius": 9.270220784430838e-07,
+      "final_loss": 5.118640201916128e-12,
+      "first_hit": 37,
+      "sustained_hit": 77
+    },
+    "GD lr=0.05": {
+      "final_point": [
+        9.369638519423942e-14,
+        0.0
+      ],
+      "final_radius": 9.369638519423942e-14,
+      "final_loss": 8.779012598467289e-27,
+      "first_hit": 38,
+      "sustained_hit": 38
+    },
+    "Momentum lr=0.05 beta=0.9": {
+      "final_point": [
+        -4.4438003831979416e-07,
+        -7.722893957866738e-07
+      ],
+      "final_radius": 8.910132037751447e-07,
+      "final_loss": 6.161782726902559e-12,
+      "first_hit": 65,
+      "sustained_hit": 80
+    },
+    "Adam lr=0.1": {
+      "final_point": [
+        -1.831083169897624e-06,
+        -1.831083175908841e-06
+      ],
+      "final_radius": 2.5895426569529105e-06,
+      "final_loss": 3.68815215460464e-11,
+      "first_hit": 79,
+      "sustained_hit": 79
+    },
+    "Tuned Momentum lr=0.1154 beta=0.2699": {
+      "final_point": [
+        3.427019329215826e-83,
+        1.0786135524066384e-82
+      ],
+      "final_radius": 1.1317472377980239e-82,
+      "final_loss": 1.175151656918087e-163,
+      "first_hit": 11,
+      "sustained_hit": 11
+    },
+    "Newton exact Hessian": {
+      "final_point": [
+        0.0,
+        0.0
+      ],
+      "final_radius": 0.0,
+      "final_loss": 0.0,
+      "first_hit": 1,
+      "sustained_hit": 1
+    }
+  },
+  "tuned_momentum": {
+    "lr": 0.11544307851020348,
+    "beta": 0.2698738636122385,
+    "scope": "positive definite quadratic with Hessian eigenvalues 2 and 20"
+  },
+  "probability": {
+    "softmax": [
+      0.09003057317038046,
+      0.24472847105479764,
+      0.6652409557748218
+    ],
+    "sum_error": 1.1102230246251565e-16,
+    "pdf_integrals": [
+      1.0,
+      1.0000000000000002
+    ],
+    "entropy": 0.6108643020548935,
+    "cross_entropy": 0.7946511994417057,
+    "kl": 0.1837868973868122
+  },
+  "checks": {
+    "area_within_1_percent": true,
+    "eigenvalue_within_5_percent": true,
+    "eigenvector_alignment": true,
+    "derivative_within_1e_minus_4": true,
+    "gradient_perpendicular": true,
+    "gd_radius_below_0_1": true,
+    "circle_lr_above_1_diverges": true,
+    "ellipse_lr_0_5_diverges": true,
+    "momentum_faster_same_lr_ellipse": true,
+    "all_parameter_gradients_checked": true,
+    "softmax_sum_within_1e_minus_6": true,
+    "svd_mse_nonincreasing": true,
+    "full_rank_reconstruction": true,
+    "normal_pdf_integrates_to_one": true
+  }
+}

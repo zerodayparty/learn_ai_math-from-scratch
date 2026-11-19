@@ -70,25 +70,34 @@ def plot_gradient(destination):  # 등고선과 기울기를 그린다.
     save_figure(figure, destination)  # 기울기 그림을 저장한다.
 
 
+PATH_STYLES = [("--", "o", 5), (":", "s", 3), ("-.", "^", 4), ((0, (5, 1, 1, 1)), "D", 3)]  # 겹친 경로도 구별되게 선 모양, 점 모양, 점 크기를 다르게 정한다.
+LOSS_STYLES = ["-", "--", ":", "-.", (0, (5, 1, 1, 1))]  # 값이 같은 손실 곡선도 보이도록 선 모양을 다르게 정한다.
+
+
 def plot_paths(paths, anisotropy, destination):  # 최적화 경로를 등고선에 올린다.
-    """여러 옵티마이저 경로를 점선으로 같은 Figure에 겹친다."""
+    """왼쪽은 등고선 위 점선 경로, 오른쪽은 반복마다 원점까지 거리를 그린다."""
     extent = max(6.0, max(float(np.max(abs(path))) for path in paths.values()) * 1.1)  # 모든 경로가 보이는 범위를 정한다.
     x, y = np.meshgrid(np.linspace(-extent, extent, 150), np.linspace(-extent, extent, 150))  # 등고선 좌표를 만든다.
-    figure, axis = plt.subplots(figsize=(7, 6))  # 경로 그림을 준비한다.
+    figure, (axis, distance_axis) = plt.subplots(1, 2, figsize=(13, 5.5))  # 경로 그림과 거리 그래프를 나란히 준비한다.
     axis.contour(x, y, x ** 2 + anisotropy * y ** 2, levels=20, cmap="Greys", alpha=0.5)  # 손실 등고선을 그린다.
-    for name, path in paths.items():  # 모든 경로를 겹쳐 그린다.
-        axis.plot(path[:, 0], path[:, 1], ".--", markersize=3, label=name)  # 시작부터 끝까지 점선으로 잇는다.
+    for (name, path), (line, marker, size) in zip(paths.items(), PATH_STYLES):  # 경로마다 다른 모양을 붙인다.
+        axis.plot(path[:, 0], path[:, 1], linestyle=line, marker=marker, markersize=size, linewidth=1.2, alpha=0.8, label=name)  # 시작부터 끝까지 점선으로 잇는다.
+        distance_axis.semilogy(np.maximum(np.linalg.norm(path, axis=1), 1e-30), linestyle=line, marker=marker, markersize=size, markevery=max(1, len(path) // 25), label=name)  # 원점까지 거리를 로그 축에 그린다.
     axis.scatter([0], [0], marker="*", color="black", s=100, label="Minimum")  # 최솟값 위치를 표시한다.
-    axis.set(title=f"f(x,y)=x^2+{anisotropy:g}y^2", xlabel="x", ylabel="y", aspect="equal")  # 함수와 좌표를 표시한다.
-    axis.legend()  # 옵티마이저 이름을 표시한다.
+    axis.set(title=f"Path on f(x,y)=x^2+{anisotropy:g}y^2", xlabel="x", ylabel="y", aspect="equal")  # 함수와 좌표를 표시한다.
+    distance_axis.axhline(0.1, color="grey", linewidth=0.8, linestyle=":")  # 수렴 판정 반경 0.1을 표시한다.
+    distance_axis.set(title="Distance to minimum (log scale, floor 1e-30)", xlabel="Iteration", ylabel="||(x, y)||")  # 거리 그래프의 뜻을 표시한다.
+    distance_axis.grid(alpha=0.2)  # 비교할 격자를 넣는다.
+    axis.legend(fontsize=8)  # 옵티마이저 이름을 표시한다.
+    distance_axis.legend(fontsize=8)  # 오른쪽 그래프에도 이름을 표시한다.
     save_figure(figure, destination)  # 경로 비교 그림을 저장한다.
 
 
 def plot_losses(losses, destination, title):  # 수렴 속도를 그래프로 비교한다.
     """0을 작은 양수로 표시하여 로그 축에서 손실을 비교한다."""
     figure, axis = plt.subplots(figsize=(8, 5))  # 손실 그래프를 만든다.
-    for name, values in losses.items():  # 각 실험의 손실을 그린다.
-        axis.semilogy(np.maximum(values, 1e-30), label=name)  # 작은 손실도 보이게 로그 축을 쓴다.
+    for index, (name, values) in enumerate(losses.items()):  # 각 실험의 손실을 그린다.
+        axis.semilogy(np.maximum(values, 1e-30), linestyle=LOSS_STYLES[index % len(LOSS_STYLES)], linewidth=max(0.8, 2.5 - 0.3 * index), label=name)  # 겹친 곡선도 보이게 선 모양과 굵기를 바꾼다.
     axis.set(title=title, xlabel="Iteration", ylabel="Loss (log scale, floor 1e-30)")  # 축의 의미를 설명한다.
     axis.grid(alpha=0.2)  # 비교할 격자를 넣는다.
     axis.legend()  # 실험 이름을 표시한다.

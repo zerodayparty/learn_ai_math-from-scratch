@@ -6,7 +6,7 @@ AI(Artificial Intelligence, 인공지능)가 학습할 때 사용하는 수학�
 
 수학 구현에는 NumPy만 사용한다. Matplotlib은 그림과 이미지 입출력을 담당한다. Jupyter 도구는 노트북 실행·표시용이며 자동 미분이나 수학 알고리즘을 대신하지 않는다.  
 
-처음이라면 [그림으로 배우는 AI 수학 안내서](_practice/36_AI수학_그림으로_이해하기.html)를 브라우저에서 열고 순서대로 읽어보자. 이 안내서는 로컬 실습 자료이며 `_practice` 폴더는 현재 Git 추적에서 제외되어 있다.
+처음이라면 [그림으로 배우는 AI 수학 안내서](_practice/38_AI수학_그림으로_이해하기.html)를 브라우저에서 열고 순서대로 읽어보자. 이 안내서는 로컬 실습 자료이며 `_practice` 폴더는 현재 Git 추적에서 제외되어 있다.
 
 <br><br>
 
@@ -86,11 +86,21 @@ uv run --locked jupyter lab
 | docs/requirement_review.md | 모순·빈 값의 처리 근거와 요구사항 대응표 |  
 | docs/concepts.md | 용어와 추가 학습 순서 |  
 | docs/validation.md | 실제 확인한 범위와 결과 |  
-| _practice/ | 20번부터 짝수 순서의 따라 만드는 실습 |  
+| _practice/ | 20번부터 짝수 순서의 따라 만드는 실습 (로컬 전용, Git 제외) |  
 | _record/ | 변경 이유와 검증 결과의 상세 작업 기록 |  
-| outputs/ | 실행으로 만든 PNG 및 summary.json |  
+| outputs/ | 실행으로 만든 PNG 13개와 summary.json (GitHub에서 바로 확인 가능하도록 Git 추적) |  
 | pyproject.toml / uv.lock | 직접 의존성과 전체 설치 버전 잠금 |  
 | requirements.txt | uv.lock에서 내보낸 실행용 패키지 버전 |  
+
+<br>
+
+### 🟡 모듈 분리 기준  
+
+- 한 파일은 한 가지 수학 주제의 **계산**만 책임진다. `linear_algebra`는 행렬, `calculus`는 미분, `optimizer`는 이동 규칙, `probability`는 분포와 손실, `backprop`은 신경망 기울기를 맡는다.  
+- 그림 코드는 `visualization.py` 한 곳에 모았다. 계산 함수는 그림 없이 테스트할 수 있고, 그림 모양을 바꿔도 계산 코드는 바뀌지 않는다.  
+- 요구사항이 정한 위치(`src/linear_algebra.py`의 변환 시각화, `src/calculus.py`의 Gradient 시각화, `src/optimizer.py`의 수렴 경로 시각화)에는 같은 이름의 진입 함수를 두고 실제 그리기는 `visualization.py`에 맡긴다.  
+- 실험 조건(시작점, 학습률, 반복 횟수)과 통과 판정은 `experiments.py`에 모았다. 수학 함수는 조건을 모르고, 실험 파일은 수학 공식을 다시 구현하지 않는다.  
+- 입력 검사(빈 배열, NaN, 음수 학습률)는 `common.py`에서 공통으로 처리한다.  
 
 <br><br>
 
@@ -107,13 +117,20 @@ uv run --locked jupyter lab
 | 은닉층 기울기 | [-0.0439785158, -0.0517335044] |  
 | 전체 가중치·편향 중심차분 검사 | 최대 절대 오차 약 3.70×10⁻¹² |  
 | 원형 GD, lr=0.1, 100회 | 원점 반경 약 1.44×10⁻⁹ |  
+| 원형 GD, lr=1.1 | 30회 후 반경 약 1.68×10³, 발산 |  
+| 타원형 GD, lr=0.5 | 매 단계 y가 -9배, 30회 후 반경 약 2.12×10²⁹, 발산 |  
+| 타원형 같은 lr=0.01 비교 | GD 194회, Momentum(beta=0.9) 77회부터 반경 0.1 안 유지 → Momentum이 약 2.5배 빠름 |  
 | 타원형 GD, lr=0.05 | 38회부터 마지막 단계까지 반경 0.1 안 유지 |  
-| 타원형 Momentum, lr=0.05, beta=0.9 | 80회부터 마지막 단계까지 반경 0.1 안 유지 |  
+| 타원형 Momentum, lr=0.05, beta=0.9 | 80회부터 마지막 단계까지 반경 0.1 안 유지 (관성이 진동을 만드는 반례) |  
 | 타원형 곡률에 맞춘 Momentum | 11회부터 마지막 단계까지 반경 0.1 안 유지 |  
 | 정확한 Hessian을 쓴 Newton | 이번 이차 함수에서 1회 만에 원점 도달 |  
 | Softmax [1000,1001,1002] | 합 오차 1e-6 이내 |  
 
-지속 수렴 단계는 기록한 경로의 마지막까지 반경을 유지한 최초 단계다. 무한히 긴 미래에 대한 별도 증명이라는 뜻은 아니다. 설정에 따라 속도가 달라지며 Momentum이나 Adam이 항상 GD보다 빠르다고 주장하지 않는다.  
+지속 수렴 단계는 기록한 경로의 마지막까지 반경을 유지한 최초 단계다. 무한히 긴 미래에 대한 별도 증명이라는 뜻은 아니다.  
+
+Momentum이 빠른 이유: 타원형 함수에서 x 방향은 기울기가 작다(2x). 작은 lr의 GD는 x 방향으로 한 번에 2%씩만 줄어든다. Momentum은 같은 방향의 기울기를 속도 v에 계속 쌓아서 완만한 방향의 이동 거리를 최대 약 1/(1-beta)=10배까지 키운다. 기울기가 큰 y 방향은 부호가 바뀌는 기울기끼리 서로 상쇄된다. 곡률 차이가 큰 타원형 함수일수록 이 차이가 두드러진다. 반대로 lr=0.05처럼 GD가 이미 y 방향을 한 번에 없애는 설정에서는 관성이 오히려 진동을 만든다. 그래서 두 설정을 모두 기록했다.  
+
+실행하면 터미널에 det와 면적비, 고유값 오차, 미분 오차, 최적화 반경, 역전파 체크포인트, Softmax 합 오차가 숫자로 먼저 출력된다. 그 다음 14개 판정이 PASS/FAIL로 출력된다.  
 
 ### 🟡 그림 목록  
 
@@ -122,16 +139,33 @@ uv run --locked jupyter lab
 | transformations.png | 원과 방향 기준선·격자의 회전, 확대/축소, 전단 |  
 | svd_comparison.png | 원본과 k=10,50,100 복원, 실제 rank와 저장량 |  
 | gradient.png | 등고선의 접선과 기울기의 수직 관계 |  
-| optimization_circle.png | 원형 함수의 GD·Momentum 점선 경로 |  
-| learning_rates.png | lr=0.1,0.5,0.9,1.0,1.1 손실 비교 |  
-| divergence_path.png | lr=1.1의 발산 경로 |  
-| optimization_ellipse.png | 같은 lr에서 타원형 GD·Momentum 경로 |  
+| optimization_circle.png | 원형 함수의 GD·Momentum 점선 경로(왼쪽)와 원점까지 거리(오른쪽) |  
+| learning_rates.png | 원형 함수 lr=0.1,0.5,0.9,1.0,1.1 손실 비교 (0.1과 0.9는 같은 곡선) |  
+| divergence_path.png | 원형 함수 lr=1.1의 발산 경로 |  
+| learning_rates_ellipse.png | 타원형 함수 lr=0.01,0.05,0.09,0.1,0.5 손실 비교, lr=0.5 발산 |  
+| divergence_ellipse_lr05.png | 타원형 함수 lr=0.5의 발산 경로 |  
+| optimization_ellipse.png | 같은 lr=0.01에서 타원형 GD·Momentum 경로, Momentum이 더 빠름 |  
+| optimization_ellipse_lr005.png | lr=0.05에서 타원형 GD·Momentum 경로, Momentum이 진동하는 반례 |  
 | momentum_tuned.png | 곡률을 고려한 Momentum의 추가 비교 |  
 | optimizer_comparison.png | GD·Momentum·Adam·Newton 손실 비교 |  
 | probability_distributions.png | 두 정규분포 PDF와 두 Bernoulli PMF |  
 | finite_difference_errors.png | 추가 노트북에서 만드는 미분 간격별 오차 |  
 
-`summary.json`은 반경, 기울기, 오차, rank, 11개 수치 판정을 담는다. 실패 항목이 있으면 전체 실행도 실패한다. JSON과 그래프는 함께 확인한다.  
+`summary.json`은 반경, 기울기, 오차, rank, 14개 수치 판정을 담는다. 실패 항목이 있으면 전체 실행도 실패한다. JSON과 그래프는 함께 확인한다.  
+
+### 🟡 대표 그림  
+
+| 그림 | 확인할 내용 |  
+| --- | --- |
+| ![행렬 변환](outputs/transformations.png) | 회전·스케일링·전단, 제목에 \|det\|와 면적비 |  
+| ![SVD 비교](outputs/svd_comparison.png) | k=10, 50, 100 복원 비교 |  
+| ![Gradient](outputs/gradient.png) | 빨간 Gradient가 초록 접선과 수직 |  
+| ![원형 경로](outputs/optimization_circle.png) | 원형 함수 GD·Momentum 경로 |  
+| ![타원형 경로](outputs/optimization_ellipse.png) | 같은 lr에서 Momentum의 이점 |  
+| ![타원형 발산](outputs/learning_rates_ellipse.png) | 타원형 lr=0.5 발산 |  
+| ![분포](outputs/probability_distributions.png) | 정규 PDF 2종, 베르누이 PMF 2종 |  
+
+<br>
 
 ### 🟡 실행 결과를 눈으로 확인하기
 
@@ -140,14 +174,15 @@ uv run --locked jupyter lab
 3. 처음에는 `transformations.png`에서 원이 어떻게 바뀌는지 보고, `gradient.png`에서 기울기 화살표를 확인한다. 이어서 `optimization_circle.png`의 점선을 따라가면 원점으로 이동하는 과정을 볼 수 있다.
 4. `summary.json`은 텍스트 편집기로 열어 수치와 검사 결과를 확인한다. `true`는 검사 통과, `false`는 검사 실패를 뜻한다. 그림의 모양과 숫자를 함께 살펴본다.
 
-기본 실험은 `outputs` 안에 그림 10개와 `summary.json`을 저장한다. 추가 노트북을 실행하면 미분 간격을 비교하는 `finite_difference_errors.png`도 생긴다. 같은 출력 폴더에 다시 실행하면 이름이 같은 결과는 덮어쓴다. 별도 폴더가 필요하면 위의 `--output-dir` 예시를 사용한다.
+기본 실험은 `outputs` 안에 그림 13개와 `summary.json`을 저장한다. 추가 노트북을 실행하면 미분 간격을 비교하는 `finite_difference_errors.png`도 생긴다. 같은 출력 폴더에 다시 실행하면 이름이 같은 결과는 덮어쓴다. 별도 폴더가 필요하면 위의 `--output-dir` 예시를 사용한다.
 
 <br><br>
 
 ## 🟢 5. 요구사항을 읽을 때 주의할 내용  
 
 - `y_true`는 비어 있어 원문 결과 예시의 1을 사용했다.  
-- `f=x²+y²`에서 `lr=0.5`는 한 단계에 원점으로 간다. 수렴 범위는 `0<lr<1`, `lr=1`은 진동, `lr>1`은 발산이다.  
+- `f=x²+y²`에서 `lr=0.5`는 한 단계에 원점으로 간다. 수렴 범위는 `0<lr<1`, `lr=1`은 진동, `lr>1`은 발산이다. 원문의 "lr≥0.5 발산"은 타원형 함수 `f=x²+10y²`에서 성립한다(`0<lr<0.1`에서만 수렴). 두 함수의 발산 그래프를 모두 저장했다.  
+- 원문 예시의 lr=0.05 타원형 비교에서는 GD가 y 방향을 한 단계에 없애므로 Momentum이 더 느리다. 같은 lr=0.01 비교에서 Momentum의 이점을 확인하고, lr=0.05 결과는 반례로 함께 기록했다.  
 - 64 이하 이미지에서 k=100은 가능한 최대 rank로 제한된다. 실제 제공 이미지의 전처리 크기는 63×64라 최대 rank가 63이다.  
 - SVD의 저장량은 같은 자료형의 원소 수 기준이다. 높은 rank는 PNG 파일을 더 작게 만든다는 보장이 없다.  
 - Power Iteration은 실수 대칭 행렬의 지배 고유쌍을 구한다. 조건과 한계는 별도 문서에 적었다.  
@@ -163,13 +198,15 @@ uv run --locked jupyter lab
 - `.gitignore`는 비밀 파일, 가상 환경, 원본 데이터, 생성 결과를 제외한다.  
 - Docker는 허용한 코드와 requirements.txt만 복사하며 `.env`를 자동으로 읽지 않는다.  
 - 노트북 실행 출력에 사용자 개인 절대 경로가 있으면 저장을 중단한다.  
-- 생성된 그림, `_practice`, `_record`는 기존 Git 제외 정책을 유지한다. 로컬에는 생성되어 있다.  
+- `outputs/` 바로 아래의 PNG와 `summary.json`은 평가자가 GitHub에서 볼 수 있게 Git에 포함한다. 하위 폴더(`outputs/generated` 등)는 제외한다.  
+- `_practice`, `_record`는 로컬 학습 기록이라 Git에서 제외한다.  
+- `svd_comparison.png`는 `data/europe.png`를 63×64 흑백으로 줄인 결과다. 원본 이미지의 배포 권한을 확인하기 어렵다면 `uv run --locked main.py --synthetic`으로 다시 만든 그림을 올린다.  
 - `data/europe.png`의 원본 출처·배포 권한은 확인하지 않았다. 원본 이미지는 Git에 추가하지 않는다. 다른 환경은 직접 생성 예제로 재현할 수 있다.  
 - GitHub 레포지토리 URL 제출은 저장소를 게시한 뒤 할 수 있다. 이 작업은 로컬 구현과 검증까지이며 원격 게시를 수행하지 않았다.  
 
 <br><br>
 
-## 🟢 8. 원문 자료  
+## 🟢 7. 원문 자료  
 
 - 환경과 실행: [uv 프로젝트 문서](https://docs.astral.sh/uv/guides/projects/)  
 - SVD의 배열 크기와 복원: [NumPy SVD 문서](https://numpy.org/doc/stable/reference/generated/numpy.linalg.svd.html)  

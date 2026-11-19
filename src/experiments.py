@@ -46,19 +46,24 @@ def run_experiments(output_dir="outputs", image_path=None):  # 과제의 모든 
     plot_paths(circle_paths, 1, output / "optimization_circle.png")  # 같은 등고선 위에 경로를 겹친다.
     report["circle_optimization"] = {name: path_summary(path) for name, path in circle_paths.items()}  # 원형 함수의 결과를 기록한다.
     rate_paths = {f"lr={lr}": optimize(quadratic_gradient, [5, 5], VanillaGD(lr), 30) for lr in [0.1, 0.5, 0.9, 1.0, 1.1]}  # 수렴, 진동, 발산을 비교한다.
-    plot_losses({name: [quadratic(point) for point in path] for name, path in rate_paths.items()}, output / "learning_rates.png", "Circle: converge lr<1, oscillate lr=1, diverge lr>1")  # 실제 학습률 경계를 그린다.
+    plot_losses({(name + " (overlaps lr=0.1: |1-2lr|=0.8)" if name == "lr=0.9" else name): [quadratic(point) for point in path] for name, path in rate_paths.items()}, output / "learning_rates.png", "Circle: converge lr<1, oscillate lr=1, diverge lr>1")  # 실제 학습률 경계를 그린다.
     plot_paths({"GD lr=1.1 (divergence)": rate_paths["lr=1.1"]}, 1, output / "divergence_path.png")  # 발산 경로를 등고선에 표시한다.
     report["learning_rates"] = {name: path_summary(path) for name, path in rate_paths.items()}  # 학습률별 수치를 기록한다.
     ellipse_gradient = lambda point: quadratic_gradient(point, 10)  # 타원형 함수의 기울기를 만든다.
-    ellipse_paths = {"GD lr=0.05": optimize(ellipse_gradient, [5, 5], VanillaGD(0.05), 300), "Momentum lr=0.05 beta=0.9": optimize(ellipse_gradient, [5, 5], Momentum(0.05, 0.9), 300), "Adam lr=0.1": optimize(ellipse_gradient, [5, 5], Adam(0.1), 300)}  # 같은 시작점과 반복 예산으로 비교한다.
-    plot_paths({name: path for name, path in ellipse_paths.items() if not name.startswith("Adam")}, 10, output / "optimization_ellipse.png")  # 요구된 두 경로를 겹친다.
+    ellipse_rate_paths = {f"lr={lr}": optimize(ellipse_gradient, [5, 5], VanillaGD(lr), 30) for lr in [0.01, 0.05, 0.09, 0.1, 0.5]}  # 타원형 함수에서 lr=0.5 이상이 발산하는지 확인한다.
+    plot_losses({name: [quadratic(point, 10) for point in path] for name, path in ellipse_rate_paths.items()}, output / "learning_rates_ellipse.png", "Ellipse x^2+10y^2: converge lr<0.1, oscillate lr=0.1, diverge lr=0.5")  # 타원형 함수의 학습률 경계를 그린다.
+    plot_paths({"GD lr=0.5 (divergence)": ellipse_rate_paths["lr=0.5"][:5]}, 10, output / "divergence_ellipse_lr05.png")  # y가 매번 -9배가 되는 발산 경로를 4단계만 표시한다.
+    report["learning_rates_ellipse"] = {name: path_summary(path, 10) for name, path in ellipse_rate_paths.items()}  # 타원형 학습률별 수치를 기록한다.
+    ellipse_paths = {"GD lr=0.01": optimize(ellipse_gradient, [5, 5], VanillaGD(0.01), 300), "Momentum lr=0.01 beta=0.9": optimize(ellipse_gradient, [5, 5], Momentum(0.01, 0.9), 300), "GD lr=0.05": optimize(ellipse_gradient, [5, 5], VanillaGD(0.05), 300), "Momentum lr=0.05 beta=0.9": optimize(ellipse_gradient, [5, 5], Momentum(0.05, 0.9), 300), "Adam lr=0.1": optimize(ellipse_gradient, [5, 5], Adam(0.1), 300)}  # 같은 시작점과 반복 예산으로 비교한다.
+    plot_paths({name: ellipse_paths[name] for name in ["GD lr=0.01", "Momentum lr=0.01 beta=0.9"]}, 10, output / "optimization_ellipse.png")  # 같은 lr에서 Momentum이 완만한 x 방향을 가속하는 모습을 겹친다.
+    plot_paths({name: ellipse_paths[name] for name in ["GD lr=0.05", "Momentum lr=0.05 beta=0.9"]}, 10, output / "optimization_ellipse_lr005.png")  # GD가 이미 빠른 설정에서는 관성이 진동을 만드는 반례를 겹친다.
     tuned_lr = 4 / (np.sqrt(20) + np.sqrt(2)) ** 2  # 곡률 2와 20에 맞는 학습률을 계산한다.
     tuned_beta = ((np.sqrt(20) - np.sqrt(2)) / (np.sqrt(20) + np.sqrt(2))) ** 2  # 이차 함수에 맞는 관성을 계산한다.
     tuned_path = optimize(ellipse_gradient, [5, 5], Momentum(tuned_lr, tuned_beta), 300)  # 튜닝한 관성의 효과를 확인한다.
     ellipse_paths[f"Tuned Momentum lr={tuned_lr:.4f} beta={tuned_beta:.4f}"] = tuned_path  # 튜닝 결과를 추가한다.
     ellipse_paths["Newton exact Hessian"] = newton_optimize(ellipse_gradient, lambda point: quadratic_hessian(point, 10), [5, 5])  # 정확한 Hessian을 쓰는 Newton을 비교한다.
     plot_paths({"GD lr=0.05": ellipse_paths["GD lr=0.05"], "Tuned Momentum": tuned_path}, 10, output / "momentum_tuned.png")  # 튜닝 전후 이점을 보여준다.
-    plot_losses({name: [quadratic(point, 10) for point in path] for name, path in ellipse_paths.items()}, output / "optimizer_comparison.png", "Ellipse: settings matter; Newton uses an exact Hessian")  # 네 방법의 손실을 비교한다.
+    plot_losses({name: [quadratic(point, 10) for point in path] for name, path in ellipse_paths.items() if "lr=0.01" not in name}, output / "optimizer_comparison.png", "Ellipse lr=0.05 setting: GD, Momentum, Adam, tuned Momentum, Newton")  # lr=0.05 기준으로 다섯 방법의 손실을 비교한다.
     report["ellipse_optimization"] = {name: path_summary(path, 10) for name, path in ellipse_paths.items()}  # 같은 반경 기준으로 결과를 기록한다.
     report["tuned_momentum"] = {"lr": tuned_lr, "beta": tuned_beta, "scope": "positive definite quadratic with Hessian eigenvalues 2 and 20"}  # 튜닝 공식의 한계를 기록한다.
     plot_distributions(output / "probability_distributions.png")  # PDF와 PMF 그림을 저장한다.
@@ -74,12 +79,15 @@ def run_experiments(output_dir="outputs", image_path=None):  # 과제의 모든 
     checks["derivative_within_1e_minus_4"] = abs(derivative - 6) <= 1e-4  # 수치 미분 오차를 검사한다.
     checks["gradient_perpendicular"] = report["gradient_tangent_dot"] == 0  # 접선과 기울기의 내적을 검사한다.
     checks["gd_radius_below_0_1"] = report["circle_optimization"]["GD lr=0.1"]["final_radius"] < 0.1  # 원점 도달을 검사한다.
+    checks["circle_lr_above_1_diverges"] = report["learning_rates"]["lr=1.1"]["final_radius"] > report["learning_rates"]["lr=0.1"]["final_radius"] * 1e3 and report["learning_rates"]["lr=1.1"]["final_radius"] > 5 * np.sqrt(2)  # 원형 함수의 lr=1.1 발산을 검사한다.
+    checks["ellipse_lr_0_5_diverges"] = report["learning_rates_ellipse"]["lr=0.5"]["final_radius"] > 1e6  # 타원형 함수의 lr=0.5 발산을 검사한다.
+    checks["momentum_faster_same_lr_ellipse"] = report["ellipse_optimization"]["Momentum lr=0.01 beta=0.9"]["sustained_hit"] < report["ellipse_optimization"]["GD lr=0.01"]["sustained_hit"]  # 같은 lr에서 Momentum이 먼저 반경 0.1 안에 머무는지 검사한다.
     checks["all_parameter_gradients_checked"] = max(report["backprop"]["gradient_check"].values()) < 1e-8  # 모든 가중치와 편향을 검사한다.
     checks["softmax_sum_within_1e_minus_6"] = report["probability"]["sum_error"] <= 1e-6  # 확률 합을 검사한다.
     checks["svd_mse_nonincreasing"] = all(a["mse"] + 1e-14 >= b["mse"] for a, b in zip(report["svd"], report["svd"][1:]))  # 부동소수점 반올림 허용값을 두고 오차 감소를 확인한다.
     checks["full_rank_reconstruction"] = report["svd"][-1]["mse"] < 1e-20  # 전체 rank 복원을 확인한다.
     checks["normal_pdf_integrates_to_one"] = all(abs(value - 1) < 1e-6 for value in integrals)  # PDF의 넓이를 검사한다.
-    report["checks"] = checks  # 판정 결과를 기록한다.
+    report["checks"] = {name: bool(value) for name, value in checks.items()}  # NumPy 참거짓도 JSON에 저장되게 Python 참거짓으로 바꿔 기록한다.
     (output / "summary.json").write_text(json.dumps(report, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")  # 개인 경로 없는 JSON을 저장한다.
     if not all(checks.values()):  # 실패가 있으면 완료로 표시하지 않는다.
         raise RuntimeError("Experiment verification failed; inspect summary.json.")  # 검증 실패를 알린다.
