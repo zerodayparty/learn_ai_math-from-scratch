@@ -72,6 +72,8 @@ VS Code(Visual Studio Code) 확장으로 노트북을 연다. 브라우저용 Ju
 
 노트북은 프로젝트 루트나 `notebooks` 폴더 어디에서 실행해도 `src`를 찾도록 첫 셀에서 위치를 확인한다. 세 노트북 전체 자동 실행은 위의 `scripts/execute_notebooks.py` 명령을 사용한다.  
 
+노트북의 블록 수식은 `$\displaystyle ...$` 한 줄 형식으로 썼다. `$$...$$` 뒤에 공백이 붙으면 VS Code의 KaTeX(수식 렌더러)가 `ParseError`를 내기 때문이다.  
+
 <br><br>
 
 ## 🟢 3. 파일 역할  
@@ -133,6 +135,7 @@ VS Code(Visual Studio Code) 확장으로 노트북을 연다. 브라우저용 Ju
 | 타원형 같은 lr=0.01 비교 | GD 194회, Momentum(beta=0.9) 77회부터 반경 0.1 안 유지 → Momentum이 약 2.5배 빠름 |  
 | 타원형 GD, lr=0.05 | 38회부터 마지막 단계까지 반경 0.1 안 유지 |  
 | 타원형 Momentum, lr=0.05, beta=0.9 | 80회부터 마지막 단계까지 반경 0.1 안 유지 (관성이 진동을 만드는 반례) |  
+| 타원형 Adam, lr=0.1 | 79회부터 마지막 단계까지 반경 0.1 안 유지 |  
 | 타원형 곡률에 맞춘 Momentum | 11회부터 마지막 단계까지 반경 0.1 안 유지 |  
 | 정확한 Hessian을 쓴 Newton | 이번 이차 함수에서 1회 만에 원점 도달 |  
 | Softmax [1000,1001,1002] | 합 오차 1e-6 이내 |  
@@ -193,7 +196,51 @@ Momentum이 빠른 이유: 타원형 함수에서 x 방향은 기울기가 작�
 
 <br><br>
 
-## 🟢 5. 요구사항을 읽을 때 주의할 내용  
+## 🟢 5. 핵심 개념 쉽게 이해하기  
+
+<br>
+
+### 🟡 옵티마이저: 눈을 가리고 그릇 바닥 찾기  
+
+손실 함수는 그릇, 바닥은 손실이 가장 작은 곳이다. 발밑의 기울기만 느낄 수 있을 때 그 기울기를 어떻게 쓰느냐가 옵티마이저(optimizer, 최적화 방법)의 차이다.  
+
+| 방법 | 비유 | 한 걸음 규칙 | 장점 | 약점 |  
+| --- | --- | --- | --- | --- |
+| Vanilla GD (Gradient Descent, 기본 경사하강법) | 매번 멈춰 서서 발밑만 보고 걷는 사람 | 기울기 반대 방향으로 lr×기울기만큼 이동 | 단순하고 예측하기 쉽다 | 완만한 방향에서 매우 느리다 |  
+| Momentum (모멘텀) | 언덕을 굴러 내려가는 공 | 이전 속도의 β배 + 이번 기울기 | 같은 방향이 이어지면 가속한다 | 너무 빠르면 바닥을 지나쳐 출렁인다 |  
+| Adam (Adaptive Moment Estimation, 적응적 모멘트 추정) | 방향마다 보폭을 따로 맞추는 등산객 | 기울기 평균 ÷ 기울기 크기 | 가파른 방향과 완만한 방향을 비슷한 보폭으로 간다 | 바닥 근처에서 미세하게 맴돌 수 있다 |  
+
+$\displaystyle \text{GD}:\ \theta_{t+1}=\theta_t-\eta g_t$  
+
+$\displaystyle \text{Momentum}:\ v_{t+1}=\beta v_t+g_t,\quad \theta_{t+1}=\theta_t-\eta v_{t+1}$  
+
+$\displaystyle \text{Adam}:\ m_t=\beta_1m_{t-1}+(1-\beta_1)g_t,\quad v_t=\beta_2v_{t-1}+(1-\beta_2)g_t^2,\quad \theta_{t+1}=\theta_t-\eta\frac{\hat m_t}{\sqrt{\hat v_t}+\epsilon}$  
+
+- $\theta$는 현재 위치, $\eta$는 학습률(lr), $g$는 기울기, $\beta$는 이전 속도를 남기는 비율이다.  
+- Adam의 $m$은 기울기 평균(관성), $v$는 기울기 제곱 평균(크기)이다. $\hat m,\hat v$는 초반 값이 0 쪽으로 치우친 것을 바로잡은 값이다.  
+- 이 과제의 타원형 함수 `x²+10y²`에서 반경 0.1 안에 계속 머문 시작 단계: GD lr=0.01은 194회, Momentum lr=0.01·β=0.9는 77회, Adam lr=0.1은 79회다. 구현은 `src/optimizer.py`, 손실 비교는 `optimizer_comparison.png`에 있다.  
+
+<br>
+
+### 🟡 손실 함수와 MLE  
+
+MLE(Maximum Likelihood Estimation, 최대우도추정)는 이미 본 데이터가 나올 확률이 가장 높은 모델 값을 고르는 방법이다. 확률을 곱한 값에 $-\log$를 씌우면 최소화할 손실 함수가 된다. 어떤 분포를 가정하느냐에 따라 손실 함수가 달라진다.  
+
+$\displaystyle \hat\theta=\arg\min_\theta\left(-\sum_{i=1}^{n}\log P(y_i\mid x_i,\theta)\right)$  
+
+| 손실 | 식 | 가정한 분포 | 쓰는 문제 | 이 과제에서 쓰는 곳 |  
+| --- | --- | --- | --- | --- |
+| MSE (Mean Squared Error, 평균 제곱 오차) | $\frac{1}{n}\sum(y_i-\hat y_i)^2$ | 정규분포 | 회귀 (연속 숫자) | SVD 복원 오차(`src/linear_algebra.py`), 정규분포 MLE 유도(`notebooks/probability_loss.ipynb`) |  
+| BCE (Binary Cross-Entropy, 이진 교차 엔트로피) | $-(y\log\hat y+(1-y)\log(1-\hat y))$ | 베르누이 분포 | 이진 분류 | 2층 신경망 역전파 손실(`src/backprop.py`), 손실 0.4350 |  
+| Cross-Entropy (교차 엔트로피) | $-\sum p_i\log q_i$ | 범주형 분포 | 다중 분류 | 분포 p=[0.3,0.7], q=[0.6,0.4] 비교(`src/probability.py`), 값 0.7947 |  
+
+- MSE는 오차를 제곱하므로 크게 빗나갈수록 벌점이 급격히 커진다.  
+- 교차 엔트로피는 정답에 준 확률이 낮을수록 벌점이 커진다. 정답 확률이 0.01이면 $-\log 0.01\approx 4.6$이다.  
+- 노트북에서 관찰값 `[1, 2, 3]`의 MSE 최적값과 정규분포 MLE 최적값이 둘 다 2.0으로 같음을 확인한다.  
+
+<br><br>
+
+## 🟢 6. 요구사항을 읽을 때 주의할 내용  
 
 - `y_true`는 비어 있어 원문 결과 예시의 1을 사용했다.  
 - `f=x²+y²`에서 `lr=0.5`는 한 단계에 원점으로 간다. 수렴 범위는 `0<lr<1`, `lr=1`은 진동, `lr>1`은 발산이다. 원문의 "lr≥0.5 발산"은 타원형 함수 `f=x²+10y²`에서 성립한다(`0<lr<0.1`에서만 수렴). 두 함수의 발산 그래프를 모두 저장했다.  
@@ -207,7 +254,7 @@ Momentum이 빠른 이유: 타원형 함수에서 x 방향은 기울기가 작�
 
 <br><br>
 
-## 🟢 6. 보안과 제출  
+## 🟢 7. 보안과 제출  
 
 - 프로그램은 `.env`를 읽지 않고 API 키를 요구하지 않는다.  
 - `.gitignore`는 비밀 파일, 가상 환경, 원본 데이터, 생성 결과를 제외한다.  
@@ -221,7 +268,7 @@ Momentum이 빠른 이유: 타원형 함수에서 x 방향은 기울기가 작�
 
 <br><br>
 
-## 🟢 7. 원문 자료  
+## 🟢 8. 원문 자료  
 
 - 환경과 실행: [uv 프로젝트 문서](https://docs.astral.sh/uv/guides/projects/)  
 - SVD의 배열 크기와 복원: [NumPy SVD 문서](https://numpy.org/doc/stable/reference/generated/numpy.linalg.svd.html)  

@@ -4,18 +4,23 @@ import numpy as np  # 수학 계산 도구를 가져온다.
 from src.common import finite_array, positive_number  # 입력 검사 도구를 가져온다.
 
 
+# ✅ 
 def central_difference(function, x, h=1e-5):  # 양쪽의 함수값으로 기울기를 구한다.
-    """f'(x) ≈ (f(x+h)-f(x-h))/(2h)를 계산한다."""
+    """중심차분법 : f'(x) ≈ (f(x+h)-f(x-h)) / (2h) 를 계산한다."""
     finite_array([x])  # 미분 위치를 확인한다.
     positive_number(h, "h")  # 양수 간격을 확인한다.
+
     return float((function(x + h) - function(x - h)) / (2 * h))  # 중심차분 공식으로 계산한다.
 
 
 def numerical_gradient(function, point, h=1e-5):  # 여러 좌표의 편미분을 계산한다.
     """각 좌표 하나씩 바꿔 스칼라 함수의 수치 기울기를 구한다."""
     point = finite_array(point, 1)  # 벡터 형태를 확인한다.
+    
     positive_number(h, "h")  # 간격을 확인한다.
+    
     gradient = np.empty_like(point)  # 좌표마다 기울기를 담을 공간을 만든다.
+    
     for index in range(point.size):  # 좌표를 하나씩 선택한다.
         offset = np.zeros_like(point)  # 나머지 좌표는 움직이지 않게 한다.
         offset[index] = h  # 선택한 좌표만 조금 움직인다.

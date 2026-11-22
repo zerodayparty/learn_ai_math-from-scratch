@@ -92,8 +92,13 @@ def run_experiments(output_dir="outputs", image_path=None):  # 과제의 모든 
     # ========================================================================
     # 미분과 기울기 | 한 점에서 함수값이 얼마나 달라지는지 살펴본다.
     # ========================================================================
+    
+    # 중심차분법으로 계산하여 값을 가져옴
     derivative = central_difference(lambda x: x ** 2, 3)  # x=3의 수치 미분을 구한다.
+
+
     report["derivative"] = {"value": derivative, "absolute_error": abs(derivative - 6)}  # 정답 6과 비교한다.
+    
     plot_gradient(output / "gradient.png")  # 기울기와 등고선을 그린다.
     report["gradient_tangent_dot"] = float(np.array([2.0, 2.0]) @ np.array([-1.0, 1.0]))  # 기울기와 접선의 수직성을 검사한다.
 
@@ -102,7 +107,7 @@ def run_experiments(output_dir="outputs", image_path=None):  # 과제의 모든 
 
 
     # ========================================================================
-    # 신경망 | 아래 한 줄에서 입력 준비 → 순전파 → 손실 계산 → 역전파 순서로 진행한다.
+    # ✅ 신경망 | 아래 한 줄에서 입력 준비 → 순전파 → 손실 계산 → 역전파 순서로 진행한다.
     # ========================================================================
     # [입력 준비]
     # fixed_example()이 입력, 가중치, 편향, 정답을 준비한다.
@@ -131,7 +136,7 @@ def run_experiments(output_dir="outputs", image_path=None):  # 과제의 모든 
 
 
     # ========================================================================
-    # 옵티마이저 비교 | 신경망 실험과 별개로 x²+y², x²+10y²의 최솟값을 찾는다.
+    # ✅ 옵티마이저 비교 | 신경망 실험과 별개로 x²+y², x²+10y²의 최솟값을 찾는다.
     # ========================================================================
     # optimize()는 이차 함수의 기울기를 매번 구하고, 옵티마이저가 정한 방향과 크기만큼 좌표를 옮긴다.
     # 원형 등고선(x²+y²)에서 기본 경사하강법(Gradient Descent, GD)과 모멘텀의 이동 경로를 비교한다.
@@ -173,12 +178,16 @@ def run_experiments(output_dir="outputs", image_path=None):  # 과제의 모든 
 
 
     # ========================================================================
-    # 확률과 통계 | 확률분포, 점수를 확률로 바꾸는 방법, 분포의 정보량을 살펴본다.
+    # ✅ 확률과 통계 | 확률분포, 점수를 확률로 바꾸는 방법, 분포의 정보량을 살펴본다.
     # ========================================================================
     plot_distributions(output / "probability_distributions.png")  # 정규분포의 밀도와 베르누이 분포의 0·1 확률을 그린다.
+    
     probabilities = softmax([1000, 1001, 1002])  # 큰 점수 세 개를 합이 1인 확률로 바꾼다.
+    
     support = np.linspace(-10, 10, 20001)  # 정규분포 곡선 아래의 넓이를 근사할 점들을 만든다.
+    
     integrals = [float(np.trapezoid(normal_pdf(support, mean, variance), support)) for mean, variance in [(0, 1), (2, 0.5)]]  # 밀도 아래 면적을 확인한다.
+    
     p, q = np.array([0.3, 0.7]), np.array([0.6, 0.4])  # 같은 두 결과에 대해 서로 다른 확률을 주는 분포를 준비한다.
     # 엔트로피는 p의 불확실성, 교차 엔트로피는 실제 분포 p를 q로 예측할 때의 평균 정보량이다.
     # 쿨백·라이블러 발산(Kullback–Leibler Divergence, KL)은 교차 엔트로피에서 엔트로피를 뺀 값이다.
@@ -189,7 +198,7 @@ def run_experiments(output_dir="outputs", image_path=None):  # 과제의 모든 
 
 
     # ========================================================================
-    # 검증 | 각 실험 결과가 기대값이나 허용 오차 기준을 만족하는지 확인한다.
+    # ✅ 검증 | 각 실험 결과가 기대값이나 허용 오차 기준을 만족하는지 확인한다.
     # ========================================================================
     checks = {}  # 검증 결과를 모을 공간을 만든다.
     checks["area_within_1_percent"] = all(item["error"] <= 0.01 for item in report["area"].values())  # 면적 오차를 검사한다.
@@ -212,7 +221,7 @@ def run_experiments(output_dir="outputs", image_path=None):  # 과제의 모든 
 
 
     # ========================================================================
-    # 저장 | 검증 결과까지 summary.json에 쓴 뒤 실패 여부를 알린다.
+    # ✅ 저장 | 검증 결과까지 summary.json에 쓴 뒤 실패 여부를 알린다.
     # ========================================================================
     report["checks"] = {name: bool(value) for name, value in checks.items()}  # NumPy 참거짓도 JSON에 저장되게 Python 참거짓으로 바꿔 기록한다.
     (output / "summary.json").write_text(json.dumps(report, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")  # 개인 경로 없는 JSON을 저장한다.
