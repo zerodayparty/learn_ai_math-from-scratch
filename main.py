@@ -1,5 +1,3 @@
-"""명령 하나로 AI 수학 실험과 그림을 만든다."""
-
 import argparse  # 터미널 실행 옵션을 읽는다.
 from pathlib import Path  # 로컬 이미지 위치를 찾는다.
 import matplotlib  # 화면 없는 환경의 그림 저장을 설정한다.
@@ -7,6 +5,7 @@ import matplotlib  # 화면 없는 환경의 그림 저장을 설정한다.
 matplotlib.use("Agg")  # 그래프 창 없이 PNG를 저장한다.
 from src.experiments import run_experiments  # 전체 수학 실험을 가져온다.
 
+# 상수화
 CHECK_EXPLANATIONS = {  # 검사 이름을 처음 보는 사람도 이해할 수 있도록 설명한다.
     "area_within_1_percent": "행렬 변환의 면적 변화 오차가 1% 이내",  # 변환 전후의 넓이를 비교한다.
     "eigenvalue_within_5_percent": "직접 구한 고유값의 상대 오차가 5% 이내",  # 기준 고유값과 비교한다.
@@ -45,23 +44,73 @@ def print_key_numbers(report):  # 판정의 근거가 되는 숫자를 터미널
     print(f"[확률] Softmax 합과 1의 차이={report['probability']['sum_error']:.2e}\n")  # 소프트맥스 합 오차를 출력한다.
 
 
+# =============================================================================
 def main():  # 프로그램 시작점을 만든다.
     """이미지 옵션을 읽고 수학 실험과 검증 결과를 출력한다."""
-    parser = argparse.ArgumentParser(description="NumPy-only AI math experiments")  # 명령 안내를 만든다.
+    
+    # ----------------------------------------------------
+    # 🟩 이 프로그램이 어떤 옵션을 받을지 이제부터 정의하겠다'는 준비 단계
+    parser = argparse.ArgumentParser(description="NumPy-only AI math experiments")  # 옵션을 읽는 도구를 만든다.
+    
+    # ✅ 이 프로그램이 이런 옵션을 받을거다 (쓴다고 등록한 것 뿐) : "--output-dir"
+    # default는 --output-dir 뒤에 경로 옵션을 안 주면 기본 경로로 쓰라는 의미
     parser.add_argument("--output-dir", default="outputs", help="Folder for PNG and JSON results")  # 출력 폴더 옵션을 만든다.
-    images = parser.add_mutually_exclusive_group()  # 충돌하는 이미지 옵션을 묶는다.
+    # | --output-dir | 그림과 JSON(JavaScript Object Notation) 결과의 저장 폴더 |      
+    # ✏️ 1. 옵션없으면 default 경로에 결과물 저장
+    # ✏️ 2. 옵션이 있으면 해당 지정 경로에 결과물 저장
+
+
+    # ----------------------------------------------------
+    # 🟩 여기에 넣는 옵션들은 서로 충돌하니까 한 번에 하나만 선택해!!! 즉, --image랑 --synthetic 둘을 동시에 못 쓰게 한 것.
+    images = parser.add_mutually_exclusive_group()  # # 서로 / 베타적인 / 그룹  |  충돌하는 이미지 옵션을 묶는다ㄴ.
+    
+    # ✅ 이 프로그램이 이런 옵션을 받을거다 (쓴다고 등록한 것 뿐) : "--image"
     images.add_argument("--image", help="Local PNG image to resize to <=64 pixels")  # 로컬 이미지 옵션을 만든다.
+    # | --image | 내가 직접 지정하는 로컬 PNG(Portable Network Graphics) 사용 |  
+    
+    # ✅ 이 프로그램이 이런 옵션을 받을거다 (쓴다고 등록한 것 뿐) : "--synthetic" 
+        # 사진 대신 프로그램이 직접 그린(인공적으로 만든) 무늬 이미지로 SVD 실험을 해라 
     images.add_argument("--synthetic", action="store_true", help="Use the built-in generated image")  # 생성 이미지 옵션을 만든다.
-    args = parser.parse_args()  # 사용자 옵션을 읽는다.
+    # | --synthetic | 컴퓨터가 직접 생성한 64×64 이미지를 사용 |  
+
+
+    # ----------------------------------------------------
+    # 터미널에서 입력한 옵션을 읽고, 정리한 결과를 args에 담아.
+    args = parser.parse_args()  # 터미널에 입력한 옵션을 읽어 args에 담는다.
+    # synthetic은 옵션을 등록할 때 쓴 --synthetic에서 argparse가 앞의 --를 떼어 만든 이름이야.
+    # args.synthetic의 점은 args 안에서 synthetic이라는 이름의 값을 꺼낸다는 뜻이야.
+    # 옵션이 없었다면 default 값이 들어감.
+    
+
+    # root directory에 data/europe.png
     default_image = Path(__file__).resolve().parent / "data" / "europe.png"  # 제공된 이미지 위치를 찾는다.
+    
+    # 선택 이미지 사용
     image = args.image or (default_image if default_image.exists() and not args.synthetic else None)  # 지정 이미지, 제공 이미지, 생성 이미지 순서로 고른다.
-    report = run_experiments(args.output_dir, image)  # 모든 실험과 수치 검증을 실행한다.
+    # ✏️ 1. args.image = --image 옵션(내가 지정한 경로)을 쓰는 경우
+    # ✏️ 2. (default_image if ~~) = --synthetic 옵션(컴퓨터가 임의로 만든)을 쓰는 경우
+    # ✏️ 3. 옵션이 없다면 default image를 쓴다.
+
+
+    # ----------------------------------------------------
+    # ❤️ 핵심 함수 = run_experiments
+    # 인자로 출력결과물 저장 경로와 사용할 이미지 2개를 받는다.
+    report = run_experiments(args.output_dir, image)  # 모든 실험과 수치 검증을 실행한다. (return dictionary type)
+        # def run_experiments(output_dir="outputs", image_path=None):  # 과제의 모든 실험을 실행한다.
+    
     print("Image source:", report["image_source"], "shape:", report["image_shape"])  # 개인 경로 없이 실행 조건을 보여준다.
+    
     print("이미지 종류:", "로컬 이미지" if image else "프로그램이 만든 예제 이미지", "| 이미지 크기(행, 열):", report["image_shape"])  # 이미지 종류와 숫자 배열 크기를 쉽게 보여준다.
+    
     print_key_numbers(report)  # 평가에 필요한 핵심 수치를 먼저 보여준다.
+    
+
+
+    # ----------------------------------------------------
     for name, passed in report["checks"].items():  # 검증 항목을 순서대로 출력한다.
         explanation = CHECK_EXPLANATIONS.get(name, "상세 수치는 summary.json에서 확인")  # 새 검사가 추가되어도 실행이 중단되지 않게 한다.
         print(f"{'PASS' if passed else 'FAIL'}: {name} — {explanation}")  # 기존 검사 이름과 쉬운 설명을 함께 표시한다.
+    
     print("Generated PNG figures and summary.json.")  # 결과 생성을 알린다.
     print("PASS는 검사 통과, FAIL은 검사 실패를 뜻해.")  # 영어 판정의 뜻을 알려준다.
     print("결과 폴더는 기본적으로 outputs야. --output-dir을 사용했다면 지정한 폴더를 열어봐.")  # 사용자가 첫 결과를 찾도록 안내한다.

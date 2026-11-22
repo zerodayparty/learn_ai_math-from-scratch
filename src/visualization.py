@@ -40,20 +40,26 @@ def plot_transformations(destination):  # 세 변환을 한 그림에 비교한�
     save_figure(figure, destination)  # 결과 그림을 저장한다.
     return checks  # 수치 검증 결과를 돌려준다.
 
-
+# ✅ 원본 이미지랑 복원한 이미지들을 나란히 그려서 파일로 저장하는 함수
 def plot_svd(image, destination):  # 요청한 세 rank를 비교한다.
     """원본과 k=10,50,100 복원을 같은 밝기 범위로 그린다."""
     figure, axes = plt.subplots(1, 4, figsize=(14, 4))  # 네 이미지를 나란히 놓는다.
+    
     axes[0].imshow(image, cmap="gray", vmin=0, vmax=1)  # 원본 흑백 이미지를 그린다.
     axes[0].set_title(f"Original {image.shape}")  # 원본 크기를 표시한다.
+    
     info_list = []  # rank별 오차와 저장량을 모은다.
+    
+    # 
     for axis, k in zip(axes[1:], [10, 50, 100]):  # 요구된 k 값을 순회한다.
         restored, info = svd_compress(image, k)  # 이미지를 압축하고 복원한다.
         info_list.append(info)  # 복원 정보를 저장한다.
         axis.imshow(restored, cmap="gray", vmin=0, vmax=1)  # 같은 밝기 기준으로 그린다.
         axis.set_title(f"k={k}, effective={info['effective_rank']}\nMSE={info['mse']:.2e}, storage={info['storage_ratio']:.2f}x")  # 실제 rank와 저장량을 표시한다.
+    
     for axis in axes:  # 모든 이미지의 좌표 눈금을 숨긴다.
         axis.axis("off")  # 그림을 크게 보이게 한다.
+    
     save_figure(figure, destination)  # 비교 그림을 저장한다.
     return info_list  # 화질 정보를 반환한다.
 

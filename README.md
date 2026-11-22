@@ -1,12 +1,14 @@
 # 🟩 Math from Scratch for AI  
 
+<br><br>
+
 ## 🟢 1. 프로젝트 소개  
 
 AI(Artificial Intelligence, 인공지능)가 학습할 때 사용하는 수학을 NumPy로 직접 계산하는 과제다. 행렬이 공간을 바꾸는 과정, 손실을 미분하는 과정, 기울기로 가중치를 바꾸는 과정, 확률에서 손실 함수가 나오는 이유를 연결한다.  
 
 수학 구현에는 NumPy만 사용한다. Matplotlib은 그림과 이미지 입출력을 담당한다. Jupyter 도구는 노트북 실행·표시용이며 자동 미분이나 수학 알고리즘을 대신하지 않는다.  
 
-처음이라면 [그림으로 배우는 AI 수학 안내서](_practice/38_AI수학_그림으로_이해하기.html)를 브라우저에서 열고 순서대로 읽어보자. 이 안내서는 로컬 실습 자료이며 `_practice` 폴더는 현재 Git 추적에서 제외되어 있다.
+처음이라면 [그림으로 배우는 AI 수학 안내서](_practice/38_AI수학_그림으로_이해하기.html)를 브라우저에서 열고 순서대로 읽어보자. 이 안내서는 로컬 실습 자료이며 `_practice` 폴더는 현재 Git 추적에서 제외되어 있다.  
 
 <br><br>
 
@@ -15,18 +17,17 @@ AI(Artificial Intelligence, 인공지능)가 학습할 때 사용하는 수학�
 이미 `uv init --python 3.11` 방식으로 초기화된 프로젝트다. 이 폴더에서 다시 초기화할 필요가 없다. Python 3.11을 기준으로 버전이 잠긴 환경을 사용한다.  
 
 ```sh
-uv sync --locked  
-uv run --locked main.py  
-uv run --locked python -m unittest discover -s tests -v  
-uv run --locked python scripts/execute_notebooks.py  
-uv run --locked python scripts/check_project.py  
+uv sync  
+uv run main.py  
+uv run python -m unittest discover -s tests -v  
+uv run python scripts/execute_notebooks.py  
+uv run python scripts/check_project.py  
 ```
 
 | 명령 요소 | 풀네임 또는 뜻 | 하는 일 |  
 | --- | --- | --- |
 | uv | 공식 약자 풀네임이 없는 도구 이름 | Python 버전과 패키지 환경 관리 |  
 | sync | synchronize, 동기화 | uv.lock과 같은 패키지 환경 설치 |  
-| --locked | 잠금 파일 유지 | 잠금 파일을 바꿔야 한다면 실패시켜 버전 변경 방지 |  
 | run | 실행 | 프로젝트 환경에서 프로그램 실행 |  
 | python | Python 언어 실행기 | 코드를 실행 |  
 | -m | module | 지정한 모듈을 프로그램으로 실행 |  
@@ -37,12 +38,15 @@ uv run --locked python scripts/check_project.py
 
 첫 `sync`에는 공개 패키지 다운로드가 필요하다. 설치 후 수학 실험은 API(Application Programming Interface, 응용 프로그램 인터페이스) 키나 외부 서비스 연결 없이 수행한다.  
 
+<br>
+
 ### 🟡 이미지 선택  
 
 ```sh
-uv run --locked main.py --synthetic  
-uv run --locked main.py --image data/europe.png  
-uv run --locked main.py --synthetic --output-dir outputs/generated  
+uv run main.py --synthetic  
+uv run main.py --image data/europe.png  
+uv run main.py --synthetic --output-dir outputs/generated  
+uv run main.py --output-dir outputs/test261122  
 ```
 
 | 옵션 | 뜻 |  
@@ -53,13 +57,20 @@ uv run --locked main.py --synthetic --output-dir outputs/generated
 
 기본 실행은 `data/europe.png`가 있으면 사용하고 없으면 직접 생성한 예제 이미지를 사용한다. 제공 이미지는 종횡비를 유지하며 긴 쪽이 64 이하인 흑백 행렬로 바꾼다. 원본 파일은 바꾸지 않는다. 지정한 이미지가 없으면 오류를 낸다.  
 
-### 🟡 노트북 직접 열기  
+<br>
 
-```sh
-uv run --locked jupyter lab  
-```
+### 🟡 노트북 직접 열기 (VS Code)  
 
-`Jupyter`는 Julia·Python·R에서 유래한 도구 이름이고 `lab`은 laboratory(실험실)다. 브라우저에서 notebooks 폴더의 파일을 열고 Python 커널을 선택한 다음 모든 셀을 위에서 아래로 실행한다. 접속용 token이 나오는 실행 로그는 공유하지 않는다. 전체 자동 실행은 위의 `scripts/execute_notebooks.py` 명령을 사용한다.  
+VS Code(Visual Studio Code) 확장으로 노트북을 연다. 브라우저용 Jupyter Lab은 쓰지 않아도 된다.  
+
+1. VS Code 확장 탭에서 Microsoft의 `Python`과 `Jupyter` 확장을 설치한다.  
+2. 위의 `uv sync`를 먼저 실행한다. 프로젝트 안에 `.venv`(virtual environment, 가상 환경) 폴더가 생기고, 노트북 실행에 필요한 `ipykernel`(IPython kernel)도 함께 설치된다.  
+3. VS Code에서 **File → Open Folder**로 프로젝트 루트(`main.py`가 있는 폴더)를 연다.  
+4. `notebooks/backprop_derivation.ipynb`를 연다. `ipynb`는 IPython Notebook 파일이다.  
+5. 오른쪽 위 **Select Kernel → Python Environments → `.venv` (Python 3.11)**를 고른다. 커널(kernel)은 셀의 코드를 실제로 실행하는 프로그램이다.  
+6. 위쪽 **Run All**을 누르거나, 셀을 고르고 `Shift`+`Enter`로 하나씩 실행한다.  
+
+노트북은 프로젝트 루트나 `notebooks` 폴더 어디에서 실행해도 `src`를 찾도록 첫 셀에서 위치를 확인한다. 세 노트북 전체 자동 실행은 위의 `scripts/execute_notebooks.py` 명령을 사용한다.  
 
 <br><br>
 
@@ -132,6 +143,8 @@ Momentum이 빠른 이유: 타원형 함수에서 x 방향은 기울기가 작�
 
 실행하면 터미널에 det와 면적비, 고유값 오차, 미분 오차, 최적화 반경, 역전파 체크포인트, Softmax 합 오차가 숫자로 먼저 출력된다. 그 다음 14개 판정이 PASS/FAIL로 출력된다.  
 
+<br>
+
 ### 🟡 그림 목록  
 
 | PNG 파일 | 확인할 내용 |  
@@ -153,6 +166,8 @@ Momentum이 빠른 이유: 타원형 함수에서 x 방향은 기울기가 작�
 
 `summary.json`은 반경, 기울기, 오차, rank, 14개 수치 판정을 담는다. 실패 항목이 있으면 전체 실행도 실패한다. JSON과 그래프는 함께 확인한다.  
 
+<br>
+
 ### 🟡 대표 그림  
 
 | 그림 | 확인할 내용 |  
@@ -167,14 +182,14 @@ Momentum이 빠른 이유: 타원형 함수에서 x 방향은 기울기가 작�
 
 <br>
 
-### 🟡 실행 결과를 눈으로 확인하기
+### 🟡 실행 결과를 눈으로 확인하기  
 
-1. 위의 기본 실행 명령이 끝나면 터미널에서 `PASS`가 표시된 항목과 마지막 완료 문구를 확인한다. `PASS`는 해당 수치 검사를 통과했다는 뜻이다.
-2. Finder에서 이 프로젝트 폴더를 열고 `outputs` 폴더로 들어간다. 그림 파일을 더블 클릭하면 기본 이미지 보기 앱에서 열 수 있다.
-3. 처음에는 `transformations.png`에서 원이 어떻게 바뀌는지 보고, `gradient.png`에서 기울기 화살표를 확인한다. 이어서 `optimization_circle.png`의 점선을 따라가면 원점으로 이동하는 과정을 볼 수 있다.
-4. `summary.json`은 텍스트 편집기로 열어 수치와 검사 결과를 확인한다. `true`는 검사 통과, `false`는 검사 실패를 뜻한다. 그림의 모양과 숫자를 함께 살펴본다.
+1. 위의 기본 실행 명령이 끝나면 터미널에서 `PASS`가 표시된 항목과 마지막 완료 문구를 확인한다. `PASS`는 해당 수치 검사를 통과했다는 뜻이다.  
+2. Finder에서 이 프로젝트 폴더를 열고 `outputs` 폴더로 들어간다. 그림 파일을 더블 클릭하면 기본 이미지 보기 앱에서 열 수 있다.  
+3. 처음에는 `transformations.png`에서 원이 어떻게 바뀌는지 보고, `gradient.png`에서 기울기 화살표를 확인한다. 이어서 `optimization_circle.png`의 점선을 따라가면 원점으로 이동하는 과정을 볼 수 있다.  
+4. `summary.json`은 텍스트 편집기로 열어 수치와 검사 결과를 확인한다. `true`는 검사 통과, `false`는 검사 실패를 뜻한다. 그림의 모양과 숫자를 함께 살펴본다.  
 
-기본 실험은 `outputs` 안에 그림 13개와 `summary.json`을 저장한다. 추가 노트북을 실행하면 미분 간격을 비교하는 `finite_difference_errors.png`도 생긴다. 같은 출력 폴더에 다시 실행하면 이름이 같은 결과는 덮어쓴다. 별도 폴더가 필요하면 위의 `--output-dir` 예시를 사용한다.
+기본 실험은 `outputs` 안에 그림 13개와 `summary.json`을 저장한다. 추가 노트북을 실행하면 미분 간격을 비교하는 `finite_difference_errors.png`도 생긴다. 같은 출력 폴더에 다시 실행하면 이름이 같은 결과는 덮어쓴다. 별도 폴더가 필요하면 위의 `--output-dir` 예시를 사용한다.  
 
 <br><br>
 
@@ -200,7 +215,7 @@ Momentum이 빠른 이유: 타원형 함수에서 x 방향은 기울기가 작�
 - 노트북 실행 출력에 사용자 개인 절대 경로가 있으면 저장을 중단한다.  
 - `outputs/` 바로 아래의 PNG와 `summary.json`은 평가자가 GitHub에서 볼 수 있게 Git에 포함한다. 하위 폴더(`outputs/generated` 등)는 제외한다.  
 - `_practice`, `_record`는 로컬 학습 기록이라 Git에서 제외한다.  
-- `svd_comparison.png`는 `data/europe.png`를 63×64 흑백으로 줄인 결과다. 원본 이미지의 배포 권한을 확인하기 어렵다면 `uv run --locked main.py --synthetic`으로 다시 만든 그림을 올린다.  
+- `svd_comparison.png`는 `data/europe.png`를 63×64 흑백으로 줄인 결과다. 원본 이미지의 배포 권한을 확인하기 어렵다면 `uv run main.py --synthetic`으로 다시 만든 그림을 올린다.  
 - `data/europe.png`의 원본 출처·배포 권한은 확인하지 않았다. 원본 이미지는 Git에 추가하지 않는다. 다른 환경은 직접 생성 예제로 재현할 수 있다.  
 - GitHub 레포지토리 URL 제출은 저장소를 게시한 뒤 할 수 있다. 이 작업은 로컬 구현과 검증까지이며 원격 게시를 수행하지 않았다.  
 

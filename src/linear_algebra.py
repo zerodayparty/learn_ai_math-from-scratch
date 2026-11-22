@@ -13,20 +13,20 @@ def unit_circle(count=100):  # 단위 원 위의 점을 만든다.
     theta = np.linspace(0, 2 * np.pi, count, endpoint=False)  # 원을 겹치지 않는 각도로 나눈다.
     return np.stack([np.cos(theta), np.sin(theta)])  # 가로와 세로 좌표를 쌓는다.
 
-
+# ✅
 def rotation(theta):  # 회전 행렬을 만든다.
     """라디안 theta만큼 반시계 방향으로 회전하는 행렬을 반환한다."""
     finite_array([theta])  # 각도가 유한한지 확인한다.
     c, s = np.cos(theta), np.sin(theta)  # 각도의 코사인과 사인을 구한다.
     return np.array([[c, -s], [s, c]])  # 길이를 유지하는 회전 행렬을 만든다.
 
-
+# ✅
 def scaling(sx=2.0, sy=0.5):  # 확대와 축소 행렬을 만든다.
     """가로 sx배, 세로 sy배로 바꾸는 행렬을 반환한다."""
     finite_array([sx, sy])  # 배율이 유한한지 확인한다.
     return np.diag([sx, sy])  # 각 축의 배율을 대각선에 넣는다.
 
-
+# ✅
 def shear(k=1.0):  # 전단 행렬을 만든다.
     """x 좌표를 x + k*y로 바꾸는 전단 행렬을 반환한다."""
     finite_array([k])  # 기울이는 값이 유한한지 확인한다.
@@ -60,7 +60,13 @@ def area_check(matrix, count=100):  # 행렬식과 실제 면적 변화를 비�
     return {"determinant": determinant, "area_ratio": ratio, "error": error}  # 비교 결과를 돌려준다.
 
 
+# ✅
 def power_iteration(matrix, tol=1e-10, max_iter=10000, initial=None):  # 고유벡터 방향을 반복하여 찾는다.
+            # tol은 영어 tolerance의 줄임말이고, 잔차가 이 정도까지 작아지면 멈추자고 정하는 허용 오차
+            # 1e-10 = 1에 10의 마이너스 10제곱을 곱한다는 표기야. 
+                # 즉 0.0000000001처럼 1을 10으로 열 번 나눈 수, 백억 분의 1이야. 
+                # e 뒤 숫자는 소수점을 왼쪽으로 몇 칸 옮기는지 나타내.
+
     """실수 대칭 행렬의 절댓값이 가장 큰 고유쌍을 잔차로 검증한다.
 
     유일한 지배 고유값과 그 방향 성분이 있는 시작 벡터가 필요하다.
@@ -68,28 +74,54 @@ def power_iteration(matrix, tol=1e-10, max_iter=10000, initial=None):  # 고유�
     동률이나 잘못된 시작 방향은 수렴하지 않거나 다른 고유쌍을 줄 수 있다.
     """
     matrix = finite_array(matrix, 2)  # 입력 행렬을 검사한다.
+    
     if matrix.shape[0] != matrix.shape[1] or not np.allclose(matrix, matrix.T, rtol=0, atol=1e-12):  # 정사각 대칭 행렬만 허용한다.
         raise ValueError("A real symmetric square matrix is required.")  # 알고리즘의 학습 범위를 알린다.
+    
     positive_number(tol, "tol")  # 잔차 허용값을 확인한다.
+    
     positive_integer(max_iter, "max_iter")  # 최대 반복 횟수를 확인한다.
+    
     vector = np.random.default_rng(42).normal(size=matrix.shape[0]) if initial is None else finite_array(initial, 1).copy()  # 시작 방향을 정한다.
+    
     if vector.shape != (matrix.shape[0],) or np.linalg.norm(vector) == 0:  # 벡터 크기와 영벡터 여부를 확인한다.
         raise ValueError("A nonzero compatible initial vector is required.")  # 시작 방향 오류를 알린다.
+    
+    # ✅ 처음 1번
     vector /= np.linalg.norm(vector)  # 길이를 1로 만든다.
+    
     scale = max(1.0, float(np.linalg.norm(matrix)))  # 행렬 크기에 맞는 잔차 기준을 만든다.
+    # 이 행렬의 크기는 네 숫자를 각각 제곱해 더한 뒤 제곱근을 구한 값이야. 
+    # √(4² + 1² + 1² + 3²) = √27 ≈ 5.20이니까 scale은 약 5.20이야. 
+    # 이 값을 tol에 곱해서 최종 허용 오차를 정해.
+    
+    # ✅ power_iteration 행렬 곱하기 작업
     for iteration in range(1, max_iter + 1):  # 허용 횟수만큼 방향을 개선한다.
         product = matrix @ vector  # 행렬로 방향을 늘이거나 뒤집는다.
         norm = np.linalg.norm(product)  # 새 벡터 길이를 잰다.
+    
         if norm == 0:  # 영행렬이나 영공간 시작 방향을 구별한다.
             if np.any(matrix):  # 영행렬이 아니면 지배 방향을 찾을 수 없다.
                 raise ValueError("Initial vector lies in the null space.")  # 다른 시작 벡터가 필요함을 알린다.
             return 0.0, vector, iteration, 0.0  # 영행렬의 고유값 0을 돌려준다.
+
+        # ✅ 곱할 때마다 1로 맞춘다.
         vector = product / norm  # 길이를 1로 되돌린다.
-        value = float(vector @ matrix @ vector)  # 레일리 몫으로 고유값을 추정한다.
+
+        # ✅ value = 가장 큰 고유값의 근삿값 (4.61803399)
+        # 레일리 몫으로 고유값을 추정한다.
+        value = float(vector @ matrix @ vector)  # 현재 벡터의 방향에서 행렬이 몇 배로 늘리는지 추정해.
+        
+        # ✅ 잔차를 구한다.
         residual = float(np.linalg.norm(matrix @ vector - value * vector))  # Av = lambda*v의 오차를 구한다.
-        if residual <= tol * scale:  # 충분히 정확한 고유쌍인지 확인한다.
+    
+        # tol은 영어 tolerance의 줄임말이고, 잔차가 이 정도까지 작아지면 멈추자고 정하는 허용 오차
+        if residual <= tol * scale:  # = 1e-10 * 5.20
+        # 크기에 비해 정말 미세한 오차만 허용한다는 뜻.    
+        # 충분히 정확한 고유쌍인지 확인한다.
             vector *= 1 if vector[np.argmax(abs(vector))] >= 0 else -1  # 고유벡터 부호를 일정하게 맞춘다.
             return value, vector, iteration, residual  # 값과 방향, 반복 횟수, 오차를 돌려준다.
+    
     raise RuntimeError("Power iteration did not converge; check spectral gap and initial direction.")  # 수렴 실패를 숨기지 않는다.
 
 
@@ -101,6 +133,7 @@ def synthetic_image(size=64):  # 외부 파일 없이 예제 이미지를 만든
     return (image - image.min()) / (image.max() - image.min())  # 밝기를 0부터 1까지로 맞춘다.
 
 
+# ✅
 def load_grayscale(path=None, size=64):  # 이미지 읽기와 전처리를 한다.
     """이미지를 흰 배경에 합성하고 NumPy 이중선형 보간으로 size 이하로 줄인다."""
     positive_integer(size, "size")  # 크기 설정을 확인한다.
@@ -116,6 +149,7 @@ def load_grayscale(path=None, size=64):  # 이미지 읽기와 전처리를 한�
         if image.shape[2] == 4:  # 투명도 채널이 있으면 흰 배경과 합친다.
             rgb = rgb * image[..., 3:4] + (1 - image[..., 3:4])  # 투명한 부분을 흰색으로 만든다.
         image = rgb @ np.array([0.2126, 0.7152, 0.0722])  # 세 색의 밝기를 가중 평균한다.
+    
     image = finite_array(image, 2)  # 흑백 행렬을 검사한다.
     height, width = image.shape  # 기존 가로세로 크기를 확인한다.
     factor = min(1.0, size / max(height, width))  # 긴 쪽이 64 이하가 되게 배율을 정한다.
@@ -129,24 +163,44 @@ def load_grayscale(path=None, size=64):  # 이미지 읽기와 전처리를 한�
     return top * (1 - wy) + bottom * wy  # 위와 아래 밝기를 섞는다.
 
 
+# ✅ visualization - plot_svd 함수에서 사용됨
 def svd_compress(image, k):  # 중요한 특이값만 남겨 이미지를 복원한다.
     """복원 행렬과 저장 원소 수를 반환하며 k를 가능한 rank로 제한한다."""
     image = finite_array(image, 2)  # 흑백 행렬을 검사한다.
     positive_integer(k, "k")  # 남길 특이값 개수를 확인한다.
+
+    # 사진을 세로 방향 u, 성분의 강도 s, 가로 방향 vh로 분해해.
     u, s, vh = np.linalg.svd(image, full_matrices=False)  # 행렬을 세 조각으로 나눈다.
+    # U: 출력 공간의 중요한 방향들을 담고 있어.
+    # Σ: 각 방향과 연결된 특이값을 담고 있어.
+    # Vᵀ: 입력 공간의 중요한 방향을 나타내는 데 사용돼.
+
     rank = min(k, len(s))  # 행렬 크기를 넘는 요청을 실제 가능한 개수로 제한한다.
-    restored = (u[:, :rank] * s[:rank]) @ vh[:rank]  # A_k = U_k*Sigma_k*V_k^T로 복원한다.
-    stored = rank * (image.shape[0] + image.shape[1] + 1)  # 저장할 실수의 총 개수를 센다.
+    restored = (u[:, :rank] * s[:rank]) @ vh[:rank]         # A_k = U_k*Sigma_k*V_k^T로 복원한다.
+    
+    # 🔥 K만큼만 저장할 것을 계산하는 것
+    stored = rank * (image.shape[0] + image.shape[1] + 1)   # 저장할 실수의 총 개수를 센다.
+    # 무엇을 저장하나	   숫자 개수
+    # 원본의 밝기 값	  63 × 64 = 4,032개
+    # 성분 하나	세로      63개 + 가로 64개 + 강도 1개 = 128개
+    # 예시) 성분 10개	 128 × 10 = 1,280개
+    # 즉, 1,280 ÷ 4,032 ≈ 31.7%야. ⅓ ≈ 33.3%라서 약 3분의 1 저장.
+
+
     info = {"requested_k": k, "effective_rank": rank, "stored_values": stored, "storage_ratio": stored / image.size, "mse": float(np.mean((image - restored) ** 2))}  # 화질과 저장량을 기록한다.
-    return restored, info  # 복원 이미지와 설명을 돌려준다.
+    
+    return restored, info                                   # 복원 이미지와 설명을 돌려준다.
 
 
+
+# ✅
 def plot_transformations(destination):  # 선형대수 모듈에서 변환 그림을 실행한다.
     """세 행렬 변환과 면적비를 PNG로 저장한다."""
     from src.visualization import plot_transformations as plot  # 그림 코드를 필요할 때 가져온다.
     return plot(destination)  # 공통 그림 함수에 작업을 맡긴다.
 
 
+# ✅ 실제 SVD 실행
 def plot_svd(image, destination):  # 선형대수 모듈에서 이미지 비교를 실행한다.
     """k=10,50,100의 이미지 복원을 PNG로 저장한다."""
     from src.visualization import plot_svd as plot  # 그림 코드를 필요할 때 가져온다.

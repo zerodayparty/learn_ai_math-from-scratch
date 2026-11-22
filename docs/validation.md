@@ -62,12 +62,12 @@ SVD 오차 감소 판정에는 절대 허용값 1e-14를 둔다. 생성 이미�
 ## 🟢 4. 다시 실행하는 방법
 
 ```sh
-uv sync --locked
-uv run --locked main.py
-uv run --locked main.py --synthetic --output-dir outputs/generated
-uv run --locked python -m unittest discover -s tests -v
-uv run --locked python scripts/execute_notebooks.py
-uv run --locked python scripts/check_project.py
+uv sync
+uv run main.py
+uv run main.py --synthetic --output-dir outputs/generated
+uv run python -m unittest discover -s tests -v
+uv run python scripts/execute_notebooks.py
+uv run python scripts/check_project.py
 ```
 
 | 요소 | 풀네임 또는 뜻 | 해설 |
@@ -75,7 +75,6 @@ uv run --locked python scripts/check_project.py
 | uv | 공식 약자 풀네임이 없는 도구 이름 | Python 환경 관리 |
 | sync | synchronize | uv.lock과 설치 환경 맞추기 |
 | run | 실행 | 프로젝트 환경으로 실행 |
-| --locked | 잠금 유지 | 버전 변경 방지 |
 | --synthetic | 직접 생성 | 외부 이미지 없는 실행 |
 | --output-dir | 출력 폴더 | 별도 결과 저장 |
 | python -m | module | 모듈을 프로그램으로 실행 |
